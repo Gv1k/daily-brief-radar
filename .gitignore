@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+
+# 抓取产生的中间数据和生成的简报，不需要进版本库
+*.json
+daily_brief.md

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日AI雷达 · 设置你的专属简报</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#151a23;
+    --paper:#f6f3ec;
+    --panel:#ffffff;
+    --line:#d9d3c5;
+    --signal:#c65d2e;
+    --signal-dim:#e9c6b3;
+    --dim:#6b6357;
+    --ok:#3c6e52;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+
+  /* ---- header dispatch strip ---- */
+  .dispatch-strip{border-bottom:1px solid var(--line);padding:14px 0;}
+  .dispatch-strip .wrap{display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;color:var(--dim);}
+  .dispatch-strip a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--signal);}
+
+  /* ---- hero ---- */
+  .hero{padding:64px 0 48px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;color:var(--signal);text-transform:uppercase;margin-bottom:16px;}
+  .hero h1{font-size:44px;line-height:1.15;max-width:11ch;}
+  .hero p{font-size:17px;color:var(--dim);max-width:52ch;margin-top:18px;}
+  .hero-actions{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;}
+  .btn{font-family:'IBM Plex Mono',monospace;font-size:13px;padding:11px 20px;border-radius:2px;border:1px solid var(--ink);cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-ghost{background:transparent;color:var(--ink);}
+  .btn-primary:hover{background:var(--signal);border-color:var(--signal);}
+
+  /* ---- live preview signature element ---- */
+  .signal-panel{background:var(--panel);border:1px solid var(--line);border-radius:3px;margin-top:40px;padding:22px 24px;position:relative;}
+  .signal-panel::before{content:"实时预览 · LIVE PREVIEW";position:absolute;top:-10px;left:18px;background:var(--paper);padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--dim);}
+  .signal-greeting{font-family:'Fraunces',serif;font-size:19px;margin-bottom:10px;}
+  .signal-body{font-size:14px;color:var(--dim);}
+  .signal-tags{margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 9px;border:1px solid var(--line);border-radius:20px;color:var(--dim);}
+
+  /* ---- steps ---- */
+  section.step{padding:56px 0;border-top:1px solid var(--line);}
+  .step-head{display:flex;gap:16px;align-items:baseline;margin-bottom:22px;}
+  .step-num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--signal);}
+  .step h2{font-size:26px;}
+  .step-sub{color:var(--dim);font-size:14.5px;margin-top:6px;max-width:56ch;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:20px 22px;margin-top:14px;}
+  .card + .card{margin-top:12px;}
+  .card h3{font-size:15px;font-family:'Inter',sans-serif;font-weight:600;}
+  .card p{font-size:14px;color:var(--dim);margin:8px 0 0;}
+  .card a{color:var(--signal);}
+  code, .code-block{font-family:'IBM Plex Mono',monospace;font-size:13px;background:#efe9db;padding:2px 6px;border-radius:2px;}
+  .code-block{display:block;padding:14px 16px;white-space:pre-wrap;word-break:break-all;position:relative;}
+  .copy-btn{position:absolute;top:10px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--ink);color:var(--paper);border:none;padding:5px 10px;border-radius:2px;cursor:pointer;}
+
+  /* ---- questionnaire ---- */
+  fieldset{border:none;padding:0;margin:0 0 30px;}
+  legend{font-size:15px;font-weight:600;margin-bottom:12px;}
+  .q-num{font-family:'IBM Plex Mono',monospace;color:var(--signal);margin-right:6px;}
+  .options{display:flex;flex-wrap:wrap;gap:8px;}
+  .opt{font-size:13.5px;padding:8px 14px;border:1px solid var(--line);border-radius:20px;cursor:pointer;user-select:none;background:var(--panel);transition:.12s;}
+  .opt.sel{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  textarea, input[type=text]{width:100%;font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--ink);}
+  textarea{min-height:70px;resize:vertical;}
+
+  /* ---- generated output ---- */
+  #outputPanel{display:none;}
+  .secret-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px 14px;margin-top:8px;}
+  .secret-row .name{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--signal);white-space:nowrap;}
+  .secret-row .val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+  .secret-row button{flex-shrink:0;}
+
+  footer{padding:40px 0 60px;color:var(--dim);font-size:13px;font-family:'IBM Plex Mono',monospace;}
+  .status-ok{color:var(--ok);}
+
+  /* ---- GitHub界面示意图 mockup ---- */
+  .mockup{border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:16px 0;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+  .mockup-bar{background:#f6f8fa;border-bottom:1px solid var(--line);padding:9px 14px;display:flex;align-items:center;gap:6px;}
+  .mockup-dot{width:10px;height:10px;border-radius:50%;background:#d9d3c5;}
+  .mockup-url{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--dim);margin-left:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px 12px;flex:1;}
+  .mockup-body{padding:16px 18px;font-family:'Inter',sans-serif;}
+  .mockup-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--dim);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:2px 8px;margin-bottom:8px;}
+  .mockup-title{font-size:16px;font-weight:600;margin-bottom:10px;}
+  .mockup-btn{display:inline-block;font-size:12.5px;font-family:'IBM Plex Mono',monospace;padding:6px 12px;border-radius:4px;border:1px solid var(--line);}
+  .mockup-btn.green{background:#2da44e;color:#fff;border-color:#2da44e;}
+  .mockup-btn.dark{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .mockup-nav{display:flex;gap:18px;font-size:13px;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .mockup-nav span{padding-bottom:8px;}
+  .mockup-nav span.active{color:var(--ink);border-bottom:2px solid var(--signal);font-weight:600;}
+  .mockup-callout{position:relative;display:inline-block;}
+  .mockup-callout::after{content:attr(data-label);position:absolute;top:-11px;left:50%;transform:translateX(-50%) rotate(-2deg);background:var(--signal);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2px 8px;border-radius:2px;white-space:nowrap;}
+  .mockup-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:4px;margin-bottom:6px;font-size:12.5px;}
+  .mockup-row .k{font-family:'IBM Plex Mono',monospace;color:var(--signal);}
+  .mockup-row .v{color:var(--dim);}
+  .video-slot{border:2px dashed var(--line);border-radius:6px;padding:26px 20px;text-align:center;color:var(--dim);font-size:13.5px;margin:16px 0;background:var(--panel);}
+  .video-slot .mono{display:block;margin-top:6px;font-size:11.5px;}
+
+  @media (max-width:600px){
+    .hero h1{font-size:32px;}
+    .dispatch-strip .wrap{flex-direction:column;gap:6px;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<div class="dispatch-strip">
+  <div class="wrap">
+    <span>每日AI雷达 · 开源自托管简报</span>
+    <a href="https://github.com/Gv1k/daily-brief" target="_blank" id="starLink">⭐ 在 GitHub 上 Star</a>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Fork once · Run forever · Free</div>
+    <h1>训练一台只为你扫描信息的雷达</h1>
+    <p>不是又一个"AI资讯订阅"。填一份两分钟的问卷，AI 就会照着你的目标、阶段和口味，
+       每天早晚从 GitHub / Hacker News / RSS（以及西南交大同学专属的教务网通知）里挑内容、写解读、给行动建议，
+       发到你自己的邮箱。整个流程跑在你自己的 GitHub 账号上，完全免费，没有人能看到你的数据。</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#step1">开始设置 →</a>
+      <a class="btn btn-ghost" href="https://github.com/Gv1k/daily-brief" target="_blank">查看源码</a>
+    </div>
+
+    <div class="signal-panel">
+      <div class="signal-greeting" id="pvGreeting">你好 👋 先在下面填几个问题，这里会实时显示 AI 会怎么跟你说话</div>
+      <div class="signal-body" id="pvBody">早晚问候的语气、挑的内容类型、给建议的方式——都会跟着你的答案变。</div>
+      <div class="signal-tags" id="pvTags"></div>
+    </div>
+  </div>
+</header>
+
+<section class="step" id="step1">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">STEP 01</span><h2>复制一份代码到你自己名下</h2></div>
+    <p class="step-sub">整个简报跑在你自己的 GitHub 仓库里，抓取和发信都用你自己的账号，没有中间服务器，别人碰不到你的数据。</p>
+    <div class="card">
+      <h3>Fork 仓库</h3>
+      <p>打开 <a href="https://github.com/Gv1k/daily-brief" target="_blank" id="forkLink">github.com/Gv1k/daily-brief</a>，
+      点右上角 <code>Fork</code>，建议 fork 成 <b>Private（私有）</b>仓库——里面会存你的问卷画像，不建议公开。</p>
+    </div>
+
+    <p class="step-sub" style="margin-top:20px;"><b>点完 Fork 之后，页面会跳转，网址栏会变成你自己的用户名——这就说明成功了：</b></p>
+    <div class="mockup">
+      <div class="mockup-bar">
+        <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
+        <div class="mockup-url">github.com/<b>你的用户名</b>/daily-brief</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-tag">🔀 forked from Gv1k/daily-brief</div>
+        <div class="mockup-title">你的用户名 / daily-brief</div>
+        <div class="mockup-nav">
+          <span class="active">Code</span><span>Issues</span><span>Pull requests</span>
+          <span class="mockup-callout" data-label="下一步在这里找 →" style="color:var(--signal);font-weight:600;">Settings</span>
+          <span>Actions</span>
+        </div>
+        <p style="font-size:13px;color:var(--dim);margin:0;">✅ 看到网址栏里出现了<b>你自己的用户名</b>（不再是 Gv1k），并且顶部有一行小字
+        "forked from Gv1k/daily-brief"，就说明这一步做对了。<b>不需要下载任何代码到你的电脑</b>——接下来的所有操作都在这个网页里完成。</p>
+      </div>
+    </div>
+
+    <div class="video-slot">
+      🎬 这里之后会放一段实操录屏：从打开仓库到点击 Fork 的完整过程
+      <span class="mono">[VIDEO: fork-step]</span>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="step2">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">STEP 02</span><h2>准备两把钥匙</h2></div>
+    <p class="step-sub">都是免费/接近免费，5分钟内能搞定，跟着链接走就行。</p>
+    <div class="card">
+      <h3>① DeepSeek API Key（AI摘要用）</h3>
+      <p>打开 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> 注册 → 左侧 API keys → 创建一个 key 复制好 →
+      左侧充值页面充 1~5 元（每天两次简报的调用量很省，几块钱能用很久）。</p>
+    </div>
+    <div class="card">
+      <h3>② QQ邮箱授权码（发信用）</h3>
+      <p>登录你的 QQ 邮箱网页版 → 设置 → 账户 → 找到"POP3/IMAP/SMTP服务" → 开启 SMTP 服务 →
+      按提示发短信验证 → 会得到一串16位的授权码，复制好（这不是你的QQ密码，是单独生成的）。</p>
+    </div>
+    <div class="card">
+      <h3>③ Supabase 项目（可选，用于早晚去重）</h3>
+      <p>打开 <a href="https://supabase.com" target="_blank">supabase.com</a>，免费注册并新建一个项目 →
+      左侧 SQL Editor，运行一次建表语句（在你 fork 的仓库 <code>seen_records.py</code> 文件顶部注释里）→
+      左侧 Project Settings → API，复制 Project URL 和 anon public key。不填也能正常收到简报，只是早晚内容可能会重复。</p>
+    </div>
+    <div class="card">
+      <h3>④ 关于教务网这块</h3>
+      <p><b>目前只内置了西南交通大学教务网的抓取。</b>如果你是西南交大的同学，不用做任何设置，简报会自动帮你盯着教务网新通知。
+      如果你不是西南交大的同学，教务网这部分直接留空跳过就行——不影响科技资讯、GitHub Trending 等其它内容正常生成和发送，
+      你也可以自己改 <code>fetch_jwc_news.py</code> 适配你学校的教务网（代码不复杂，欢迎发 PR 一起完善）。</p>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="step3">
+
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">STEP 03</span><h2>设置你的每日 AI 雷达</h2></div>
+    <p class="step-sub">下面9个问题，2分钟填完。这不是普通的用户调研——是在告诉 AI，它该替你筛掉什么、留下什么、怎么跟你说话。</p>
+
+    <form id="qForm">
+      <fieldset data-q="identity">
+        <legend><span class="q-num">01</span>你目前的身份是？</legend>
+        <div class="options" data-type="single">
+          <div class="opt">学生</div><div class="opt">职场新人</div><div class="opt">工作多年</div>
+          <div class="opt">创业者</div><div class="opt">自由职业者</div>
+        </div>
+      </fieldset>
+
+      <fieldset data-q="stage">
+        <legend><span class="q-num">02</span>你现在处在哪个阶段？</legend>
+        <div class="options" data-type="single">
+          <div class="opt">探索方向，还不确定做什么</div><div class="opt">正在学习积累能力</div>
+          <div class="opt">求职准备阶段</div><div class="opt">工作提升阶段</div><div class="opt">创业探索阶段</div>
+        </div>
+      </fieldset>
+
+      <fieldset data-q="goal">
+        <legend><span class="q-num">03</span>你希望简报帮你解决什么？（最多选3个）</legend>
+        <div class="options" data-type="multi" data-max="3">
+          <div class="opt">了解行业趋势</div><div class="opt">提升职业竞争力</div><div class="opt">学习新知识</div>
+          <div class="opt">找工作/创业机会</div><div class="opt">获得具体行动建议</div><div class="opt">扩大视野</div>
+        </div>
+      </fieldset>
+
+      <fieldset data-q="focus">
+        <legend><span class="q-num">04</span>最想看哪类内容？（最多选5个）</legend>
+        <div class="options" data-type="multi" data-max="5">
+          <div class="opt">AI大模型/Agent</div><div class="opt">AI应用与工具</div><div class="opt">科学技术突破</div>
+          <div class="opt">AI创业与商业模式</div><div class="opt">企业与投融资动态</div><div class="opt">招聘与岗位趋势</div>
+          <div class="opt">经济</div><div class="opt">政治时事</div><div class="opt">机器人/硬件</div>
+        </div>
+      </fieldset>
+
+      <fieldset data-q="exclude">
+        <legend><span class="q-num">05</span>不希望看到什么？（可多选）</legend>
+        <div class="options" data-type="multi">
+          <div class="opt">娱乐八卦/明星新闻</div><div class="opt">纯学术论文</div><div class="opt">过深的技术细节</div>
+          <div class="opt">股票投资信息</div><div class="opt">与我无关的社会新闻</div>
+        </div>
+      </fieldset>
+
+      <fieldset data-q="explain">
+        <legend><span class="q-num">06</span>介绍一条新闻时，你最想看到什么？（最多选3个）</legend>
+        <div class="options" data-type="multi" data-max="3">
+          <div class="opt">发生了什么</div><div class="opt">为什么重要</div><div class="opt">背后的原理</div>
+          <div class="opt">对我的影响</div><div class="opt">我能做什么</div>
+        </div>
+      </fieldset>
+
+      <fieldset data-q="advice">
+        <legend><span class="q-num">07</span>给建议时你更喜欢哪种方式？</legend>
+        <div class="options" data-type="single">
+          <div class="opt">直接告诉我最推荐做什么</div>
+          <div class="opt">先分析几个可能，再告诉我最适合的</div>
+          <div class="opt">只给信息，我自己判断</div>
+        </div>
+      </fieldset>
+
+      <fieldset data-q="name">
+        <legend><span class="q-num">08</span>希望 AI 怎么称呼你？</legend>
+        <input type="text" id="nameInput" placeholder="比如：小林 / Alex / 阿泽">
+      </fieldset>
+
+      <fieldset data-q="extra">
+        <legend><span class="q-num">09</span>还有什么想让 AI 知道的？（选填）</legend>
+        <textarea id="extraInput" placeholder="比如：我正在准备考研 / 我不喜欢空泛的鸡汤建议 / 我周末不想收到简报"></textarea>
+      </fieldset>
+
+      <button type="button" class="btn btn-primary" id="genBtn">生成我的专属配置 →</button>
+    </form>
+  </div>
+</section>
+
+<section class="step" id="outputPanel">
+  <div class="wrap">
+    <div class="step-head"><span class="step-num">STEP 04</span><h2>把这些填进 GitHub Secrets</h2></div>
+    <p class="step-sub">在你 fork 的仓库页面 → <code>Settings</code> → <code>Secrets and variables</code> → <code>Actions</code> →
+    <code>New repository secret</code>，把下面每一行的 Name 和 Value 依次添加进去。</p>
+
+    <div class="mockup">
+      <div class="mockup-bar">
+        <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
+        <div class="mockup-url">github.com/你的用户名/daily-brief/settings/secrets/actions</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-nav">
+          <span>General</span><span>Collaborators</span>
+          <span class="active">Secrets and variables</span><span>Actions</span>
+        </div>
+        <p style="font-size:13px;color:var(--dim);margin:0 0 12px;">进到这个页面后，左侧会有个 <b>Secrets and variables</b>，点开选 <b>Actions</b>，
+        右上角有个绿色按钮：</p>
+        <span class="mockup-btn green mockup-callout" data-label="点这个 →">New repository secret</span>
+        <p style="font-size:13px;color:var(--dim);margin:14px 0 0;">点开后会出现两个框：<b>Name</b>（填Secret的名字，比如 <code>DEEPSEEK_API_KEY</code>，
+        要跟下面清单里完全一样，区分大小写）和 <b>Secret</b>（粘贴对应的值），填完点 <b>Add secret</b>。
+        <b>下面清单里的每一行都要这样重复添加一次</b>，一共要加这么多个。</p>
+      </div>
+    </div>
+
+    <div id="secretsList"></div>
+
+    <div class="video-slot">
+      🎬 这里之后会放一段实操录屏：怎么找到 Secrets 页面、怎么一个个添加
+      <span class="mono">[VIDEO: secrets-step]</span>
+    </div>
+
+    <div class="card" style="margin-top:22px;">
+      <h3>最后一步：手动测试一次</h3>
+      <p>都添加完后，去仓库的 <code>Actions</code> 标签 → 左侧选 workflow → 右边点 <code>Run workflow</code>。
+      跑完（2~3分钟）检查你的邮箱有没有收到简报。之后就会按每天早7:30、晚21:00自动发送，不用再管。</p>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-bar">
+        <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
+        <div class="mockup-url">github.com/你的用户名/daily-brief/actions</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-nav">
+          <span>Code</span><span>Issues</span><span>Pull requests</span>
+          <span class="active">Actions</span>
+        </div>
+        <p style="font-size:13px;color:var(--dim);margin:0 0 10px;">左侧列表点 <b>"每日AI简报"</b>，右上角会出现：</p>
+        <span class="mockup-btn dark mockup-callout" data-label="点开这个下拉 →">Run workflow ▾</span>
+        <p style="font-size:13px;color:var(--dim);margin:14px 0 8px;">点开后再点一次绿色的 <b>Run workflow</b> 确认，页面顶部会出现一条
+        带黄色圆点在转的<b>新</b>运行记录（不是之前的旧记录）。点进去等 2~3 分钟，
+        每一步前面变成绿色 ✅ 就说明成功了。如果某一步变成红色 ❌，点开那一步能看到具体报错信息。</p>
+        <div class="mockup-row"><span class="k">✅ 拉取代码</span><span class="v">已完成</span></div>
+        <div class="mockup-row"><span class="k">✅ 设置 Python</span><span class="v">已完成</span></div>
+        <div class="mockup-row"><span class="k">✅ 安装依赖</span><span class="v">已完成</span></div>
+        <div class="mockup-row"><span class="k">🟡 判断早晚班并运行</span><span class="v">运行中...</span></div>
+      </div>
+    </div>
+
+    <div class="video-slot">
+      🎬 这里之后会放一段实操录屏：手动触发一次运行 + 查看结果
+      <span class="mono">[VIDEO: verify-step]</span>
+    </div>
+
+    <div class="card">
+      <h3>觉得有用？</h3>
+      <p>如果这个项目帮到你了，回 <a href="https://github.com/Gv1k/daily-brief" target="_blank" id="starLink2">仓库</a> 点个 ⭐ Star，
+      是对这个小项目最好的支持。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    每日AI雷达 · 开源、自托管、数据只属于你 · <span id="statusMsg"></span>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// 埋点：写入 Supabase（anon key 是公开可写的，仅用于统计，不存敏感信息）
+// ============================================================
+const SUPABASE_URL = "https://pfvrfurkncmwnyzgldhc.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_hASoJCIaMcIfYSWEcjaCPw_lvZ7hDbA";
+const SESSION_ID = (() => {
+  let id = sessionStorage.getItem("dr_session");
+  if (!id) { id = crypto.randomUUID(); sessionStorage.setItem("dr_session", id); }
+  return id;
+})();
+
+function track(eventType, payload = {}) {
+  fetch(`${SUPABASE_URL}/rest/v1/onboarding_analytics`, {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+      "Prefer": "return=minimal",
+    },
+    body: JSON.stringify({ session_id: SESSION_ID, event_type: eventType, payload }),
+  }).catch(() => {});
+}
+
+track("page_view");
+document.getElementById("starLink").addEventListener("click", () => track("star_clicked"));
+document.getElementById("starLink2")?.addEventListener("click", () => track("star_clicked"));
+
+// 每个 step 进入视口时打一次点（用 IntersectionObserver，去重）
+const seenSteps = new Set();
+const stepObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !seenSteps.has(e.target.id)) {
+      seenSteps.add(e.target.id);
+      track("step_reached", { step: e.target.id });
+    }
+  });
+}, { threshold: 0.4 });
+document.querySelectorAll("section.step").forEach(s => stepObserver.observe(s));
+
+// ============================================================
+// 问卷交互 + 实时预览
+// ============================================================
+const answers = {};
+
+document.querySelectorAll("fieldset[data-q]").forEach(fs => {
+  const q = fs.dataset.q;
+  const optsWrap = fs.querySelector(".options");
+  if (!optsWrap) return;
+  const type = optsWrap.dataset.type;
+  const max = parseInt(optsWrap.dataset.max || "0");
+  answers[q] = type === "multi" ? [] : "";
+
+  optsWrap.querySelectorAll(".opt").forEach(opt => {
+    opt.addEventListener("click", () => {
+      if (type === "single") {
+        optsWrap.querySelectorAll(".opt").forEach(o => o.classList.remove("sel"));
+        opt.classList.add("sel");
+        answers[q] = opt.textContent;
+      } else {
+        if (opt.classList.contains("sel")) {
+          opt.classList.remove("sel");
+          answers[q] = answers[q].filter(v => v !== opt.textContent);
+        } else {
+          if (max && answers[q].length >= max) return;
+          opt.classList.add("sel");
+          answers[q].push(opt.textContent);
+        }
+      }
+      updatePreview();
+    });
+  });
+});
+
+document.getElementById("nameInput").addEventListener("input", (e) => {
+  answers.name = e.target.value.trim();
+  updatePreview();
+});
+document.getElementById("extraInput").addEventListener("input", (e) => {
+  answers.extra = e.target.value.trim();
+});
+
+function updatePreview() {
+  const name = answers.name || "你";
+  const focus = answers.focus || [];
+  document.getElementById("pvGreeting").textContent =
+    focus.length ? `${name}，早上好 👋 今天挑了几条你会在意的信息` : `${name}，先选几个关注方向，这里会实时更新`;
+  document.getElementById("pvBody").textContent =
+    answers.advice === "只给信息，我自己判断"
+      ? "只给你信息和链接，判断交给你自己。"
+      : "会给你具体到今天能做的一步行动建议，不说空话。";
+  const tagsEl = document.getElementById("pvTags");
+  tagsEl.innerHTML = "";
+  focus.slice(0, 6).forEach(t => {
+    const el = document.createElement("span");
+    el.className = "tag";
+    el.textContent = t;
+    tagsEl.appendChild(el);
+  });
+}
+
+// ============================================================
+// 生成 USER_PROFILE_TEXT（结构化画像文本，直接喂给 summarize.py）
+// ============================================================
+function buildProfileText() {
+  const a = answers;
+  const lines = [];
+  lines.push(`# 用户画像`);
+  lines.push(`## 基础信息`);
+  lines.push(`身份：${a.identity || "未填写"}`);
+  lines.push(`阶段：${a.stage || "未填写"}`);
+  lines.push(`## 核心目标`);
+  lines.push((a.goal || []).join("、") || "未填写");
+  lines.push(`## 重点关注领域`);
+  lines.push((a.focus || []).join("、") || "未填写");
+  lines.push(`## 信息过滤规则`);
+  lines.push(`不要包含：${(a.exclude || []).join("、") || "无特别排除"}`);
+  lines.push(`## 内容解释偏好`);
+  lines.push(`介绍新闻时优先给出：${(a.explain || []).join("、") || "发生了什么、为什么重要"}`);
+  lines.push(`## 行动建议偏好`);
+  lines.push(a.advice || "先分析几个可能，再给最推荐的");
+  lines.push(`## 个性化注意事项`);
+  lines.push(a.extra || "无");
+  return lines.join("\n");
+}
+
+document.getElementById("genBtn").addEventListener("click", () => {
+  const profileText = buildProfileText();
+  const userName = answers.name || "你";
+
+  track("questionnaire_submitted", {
+    identity: answers.identity, stage: answers.stage, goal: answers.goal,
+    focus: answers.focus, exclude: answers.exclude, advice: answers.advice,
+  });
+
+  const secrets = [
+    ["USER_NAME", userName],
+    ["USER_PROFILE_TEXT", profileText],
+    ["DEEPSEEK_API_KEY", "（粘贴你在 Step 2 拿到的 DeepSeek key）"],
+    ["QQ_EMAIL", "（你的QQ邮箱地址）"],
+    ["QQ_AUTH_CODE", "（你在 Step 2 拿到的16位授权码）"],
+    ["SEND_TO", "（想收简报的邮箱，通常和QQ_EMAIL一样）"],
+    ["SUPABASE_URL", "（Step 2 里可选的 Supabase 项目 URL）"],
+    ["SUPABASE_ANON_KEY", "（Step 2 里可选的 Supabase anon key）"],
+  ];
+
+  const listEl = document.getElementById("secretsList");
+  listEl.innerHTML = "";
+  secrets.forEach(([name, val]) => {
+    const row = document.createElement("div");
+    row.className = "secret-row";
+    row.innerHTML = `<span class="name">${name}</span><span class="val">${val.replace(/\n/g, " ⏎ ")}</span>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;" data-val="${encodeURIComponent(val)}">复制</button>`;
+    listEl.appendChild(row);
+  });
+  listEl.querySelectorAll("button[data-val]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      navigator.clipboard.writeText(decodeURIComponent(btn.dataset.val));
+      btn.textContent = "已复制";
+      setTimeout(() => (btn.textContent = "复制"), 1200);
+    });
+  });
+
+  document.getElementById("outputPanel").style.display = "block";
+  document.getElementById("outputPanel").scrollIntoView({ behavior: "smooth" });
+  document.getElementById("statusMsg").innerHTML = `<span class="status-ok">配置已生成</span>`;
+});
+</script>
+
+</body>
+</html>

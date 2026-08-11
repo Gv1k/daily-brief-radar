@@ -1,0 +1,42 @@
+name: 每日AI简报
+
+on:
+  schedule:
+    # 注意：GitHub Actions 的 cron 是 UTC 时间，北京时间 = UTC + 8
+    # 这里设置：北京时间早上 7:30 (UTC 23:30 前一天) 和 晚上 21:00 (UTC 13:00)
+    - cron: '30 23 * * *'   # 北京时间 07:30 早班
+    - cron: '0 13 * * *'    # 北京时间 21:00 晚班
+  workflow_dispatch:        # 允许你在 GitHub 网页上手动点按钮触发，方便测试
+
+jobs:
+  run-brief:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 判断早晚班并运行
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
+          QQ_AUTH_CODE: ${{ secrets.QQ_AUTH_CODE }}
+          SEND_TO: ${{ secrets.SEND_TO }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          # 用 cron 触发的两条时间点分别强制指定班次，比自动判断更可靠
+          HOUR_UTC=$(date -u +%H)
+          if [ "$HOUR_UTC" = "23" ]; then
+            python run_all.py morning
+          else
+            python run_all.py evening
+          fi
