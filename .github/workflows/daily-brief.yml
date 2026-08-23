@@ -32,6 +32,7 @@ jobs:
           SEND_TO: ${{ secrets.SEND_TO }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DAILY_FREQUENCY: ${{ secrets.DAILY_FREQUENCY }}
         run: |
           # 用 cron 触发的两条时间点分别强制指定班次，比自动判断更可靠
           HOUR_UTC=$(date -u +%H)

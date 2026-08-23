@@ -15,6 +15,7 @@
 """
 import subprocess
 import sys
+import os
 import time
 from datetime import datetime
 
@@ -38,6 +39,13 @@ else:
 
 slot_label = "早班" if slot == "morning" else "晚班"
 print(f"本次运行班次：{slot_label}（{slot}）")
+
+# 【推送频率】DAILY_FREQUENCY 来自问卷生成的 GitHub Secret，值是 "1" 或 "2"
+# 没设置时默认按"2"（早晚都发）处理，兼容还没配置这个 secret 的旧用户
+daily_frequency = os.environ.get("DAILY_FREQUENCY", "2").strip()
+if daily_frequency == "1" and slot == "evening":
+    print("你在问卷里选的是「一天1次」，晚班这次直接跳过，不发信、也不算失败。")
+    sys.exit(0)
 
 steps = FETCH_STEPS + [
     ("生成AI摘要", "summarize.py", slot),
