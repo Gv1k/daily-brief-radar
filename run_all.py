@@ -25,11 +25,11 @@ RETRY_WAIT_SECONDS = 60
 
 # 早晚两次推送内容完全独立，各自重新抓取一遍最新数据（不是早间的复盘）
 FETCH_STEPS = [
-    ("抓取 GitHub Trending", "fetch_github_trending.py"),
-    ("抓取教务网通知", "fetch_jwc_news.py"),
-    ("抓取 Hacker News", "fetch_hacker_news.py"),
-    ("抓取科技/AI媒体RSS", "fetch_rss_sources.py"),
-    ("抓取经济/政治/科学突破新闻", "fetch_category_news.py"),
+    ("抓取 GitHub Trending", "fetchers/fetch_github_trending.py"),
+    ("抓取教务网通知", "fetchers/fetch_jwc_news.py"),
+    ("抓取 Hacker News", "fetchers/fetch_hacker_news.py"),
+    ("抓取科技/AI媒体RSS", "fetchers/fetch_rss_sources.py"),
+    ("抓取经济/政治/科学突破新闻", "fetchers/fetch_category_news.py"),
 ]
 
 if len(sys.argv) > 1 and sys.argv[1] in ("morning", "evening"):
@@ -48,8 +48,8 @@ if daily_frequency == "1" and slot == "evening":
     sys.exit(0)
 
 steps = FETCH_STEPS + [
-    ("生成AI摘要", "summarize.py", slot),
-    ("发送简报邮件", "send_email.py", slot),
+    ("生成AI摘要", "core/summarize.py", slot),
+    ("发送简报邮件", "core/send_email.py", slot),
 ]
 
 def run_step_with_retry(step_name, script, extra_args):
@@ -79,9 +79,3 @@ for step in steps:
 
 if all_ok:
     print(f"\n✅ 全部完成！{slot_label}简报已生成并发送")
-    # idea 库：每次运行后归档简报（这一周的简报都会存到 D 盘存档）；
-    # 周六早上自动把本周简报提炼成产品 idea 存入 idea 库
-    subprocess.run([sys.executable, "extract_ideas.py"])
-    if slot == "morning" and datetime.now().weekday() == 5:
-        print("\n今天是周六，自动把本周简报提炼成产品 idea 存入 idea 库...")
-        subprocess.run([sys.executable, "extract_ideas.py", "--extract"])
