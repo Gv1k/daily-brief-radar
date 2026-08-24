@@ -8,11 +8,17 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import json
 import re
+import random
+import time
 
 def fetch_jwc_news():
+    time.sleep(random.uniform(1, 3))
+
     url = "https://jwc.swjtu.edu.cn/vatuu/WebAction?setAction=newsList"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9",
     }
 
     resp = requests.get(url, headers=headers, timeout=10)

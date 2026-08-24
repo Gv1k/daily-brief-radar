@@ -7,6 +7,8 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import json
+import random
+import time
 
 def fetch_github_trending(language="", since="daily"):
     """
@@ -14,10 +16,16 @@ def fetch_github_trending(language="", since="daily"):
     language: 留空=所有语言, 也可以传 "python" / "javascript" 等
     since: daily / weekly / monthly
     """
+    # 跑之前先随机等一下，避免每次都是掐着点的固定间隔请求，行为更接近真人访问
+    time.sleep(random.uniform(1, 4))
+
     url = f"https://github.com/trending/{language}"
     params = {"since": since}
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "Referer": "https://github.com/",
     }
 
     resp = requests.get(url, params=params, headers=headers, timeout=10)
