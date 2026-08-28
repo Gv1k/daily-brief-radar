@@ -34,10 +34,39 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           DAILY_FREQUENCY: ${{ secrets.DAILY_FREQUENCY }}
         run: |
-          # 用 cron 触发的两条时间点分别强制指定班次，比自动判断更可靠
+          # 【修复】GitHub Actions 的 schedule 触发经常会有延迟（官方已知机制，
+          # 高峰期可能晚触发几十分钟甚至更久）。原来的判断只认死板的"UTC 23点整
+          # 这一个小时"，一旦触发延迟错过这个窗口就会被误判成晚班，导致早班经常
+          # 被当成晚班、又因为"一天一次"的设置被直接跳过不发。
+          #
+          # 改成：不再卡死一个小时窗口，而是比较当前时间距离两个 cron 时间点
+          # （UTC 23:30 早班 / UTC 13:00 晚班）谁更近，就归为哪一班，抗延迟能力
+          # 更强，不会再因为触发晚了几十分钟就整班被吃掉。
           HOUR_UTC=$(date -u +%H)
-          if [ "$HOUR_UTC" = "23" ]; then
+          MIN_UTC=$(date -u +%M)
+          TOTAL_MIN=$((10#$HOUR_UTC * 60 + 10#$MIN_UTC))
+
+          # 早班 cron: 23:30 UTC = 1410 分钟；晚班 cron: 13:00 UTC = 780 分钟
+          # 早班时间点在一天的末尾，需要同时考虑"跨天"的情况，取距离较小的那个
+          DIFF_MORNING_1=$(( TOTAL_MIN - 1410 ))
+          DIFF_MORNING_2=$(( TOTAL_MIN + 1440 - 1410 ))
+          ABS_MORNING_1=${DIFF_MORNING_1#-}
+          ABS_MORNING_2=${DIFF_MORNING_2#-}
+          if [ "$ABS_MORNING_1" -le "$ABS_MORNING_2" ]; then
+            ABS_MORNING=$ABS_MORNING_1
+          else
+            ABS_MORNING=$ABS_MORNING_2
+          fi
+
+          DIFF_EVENING=$(( TOTAL_MIN - 780 ))
+          ABS_EVENING=${DIFF_EVENING#-}
+
+          echo "当前 UTC 时间：${HOUR_UTC}:${MIN_UTC}，距早班 ${ABS_MORNING} 分钟，距晚班 ${ABS_EVENING} 分钟"
+
+          if [ "$ABS_MORNING" -le "$ABS_EVENING" ]; then
+            echo "判定为：早班（morning）"
             python run_all.py morning
           else
+            echo "判定为：晚班（evening）"
             python run_all.py evening
           fi
