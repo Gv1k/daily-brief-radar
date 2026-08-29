@@ -217,8 +217,18 @@
     <div class="card">
       <h3>③ Supabase 项目（可选，用于早晚去重）</h3>
       <p>打开 <a href="https://supabase.com" target="_blank">supabase.com</a>，免费注册并新建一个项目 →
-      左侧 SQL Editor，运行一次建表语句（在你 fork 的仓库 <code>seen_records.py</code> 文件顶部注释里）→
-      左侧 Project Settings → API，复制 Project URL 和 anon public key。不填也能正常收到简报，只是早晚内容可能会重复。</p>
+      左侧找到 <b>SQL Editor</b>，把下面这段代码复制进去，点 <b>Run</b> 运行一次（这张表用来记录"今天早上已经发过哪些内容"，晚上那次会自动避开，不会重复）：</p>
+      <div class="secret-row" style="align-items:flex-start;">
+        <pre id="sbSql" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--dim);white-space:pre-wrap;margin:0;flex:1;">create table if not exists seen_records (
+  date text primary key,
+  items jsonb not null default '[]',
+  updated_at timestamptz default now()
+);</pre>
+        <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;" onclick="navigator.clipboard.writeText(document.getElementById('sbSql').textContent);this.textContent='已复制';setTimeout(()=>this.textContent='复制',1500);">复制</button>
+      </div>
+      <p style="margin-top:10px;">运行成功（显示 <code>Success</code>）之后，左侧点 <b>Project Settings → API</b>，
+      复制 <b>Project URL</b> 和 <b>anon public</b> 这个 key（不是 service_role，那个不能用）。
+      不填这一步也能正常收到简报，只是早晚内容可能会重复。</p>
     </div>
     <div class="card">
       <h3>④ 关于教务网这块</h3>
