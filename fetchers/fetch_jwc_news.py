@@ -1,20 +1,31 @@
 """
-抓取西南交通大学教务网 - 新闻列表页
-数据源：https://jwc.swjtu.edu.cn/vatuu/WebAction?setAction=newsList
-这个页面是静态渲染的完整列表（不像首页需要等JS加载），不需要登录
+抓取西南交通大学教务网 - 通知公告列表页（新版：本科生院官网）
+数据源：https://bksy.swjtu.edu.cn/tzgg/qb.htm （"通知公告-全部"栏目，静态渲染，不需要登录）
+
+【2026-09 改版说明】
+学校教务网从旧的 WebAction 动态接口（jwc.swjtu.edu.cn）换成了新的静态化CMS
+（bksy.swjtu.edu.cn，本科生院官网），页面结构完全不同，主要变化：
+1. 新闻详情链接从含 "newsDetail" 关键字，变成 "/info/栏目ID/文章ID.htm" 这种路径
+2. 日期不再是从父容器文字里单独摘取，而是直接拼接在标题文字末尾，
+   例如 "关于XXX的通知 2025/02/25"，用 "/" 分隔（旧版是 "-" 分隔）
 """
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+from urllib.parse import urljoin
 import json
 import re
 import random
 import time
 
+# 日期出现在标题文字末尾，形如 "... 2025/02/25"
+_DATE_SUFFIX_RE = re.compile(r"\s*(\d{4})/(\d{2})/(\d{2})\s*$")
+
+
 def fetch_jwc_news():
     time.sleep(random.uniform(1, 3))
 
-    url = "https://jwc.swjtu.edu.cn/vatuu/WebAction?setAction=newsList"
+    url = "https://bksy.swjtu.edu.cn/tzgg/qb.htm"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -28,23 +39,29 @@ def fetch_jwc_news():
 
     results = []
 
-    # 关键点：每条新闻的详情链接里都包含 "setAction=newsDetail"
-    # 用这个特征找真正的新闻标题链接，比瞎猜标题关键词准得多
-    news_links = soup.find_all("a", href=lambda h: h and "newsDetail" in h)
+    # 关键点：新版每条通知的详情链接都指向 "/info/栏目ID/文章ID.htm"
+    # 用这个路径特征找真正的新闻标题链接
+    news_links = soup.find_all("a", href=lambda h: h and re.search(r"/info/\d+/\d+\.htm", h))
 
     for link in news_links:
-        title = link.get_text(strip=True)
-        if not title or len(title) < 4:
+        raw_text = link.get_text(strip=True)
+        if not raw_text or len(raw_text) < 4:
+            continue
+
+        # 标题和日期在同一段文字里，末尾形如 " 2025/02/25"，切分开来
+        date_match = _DATE_SUFFIX_RE.search(raw_text)
+        if date_match:
+            title = raw_text[:date_match.start()].strip()
+            date_str = "-".join(date_match.groups())  # 统一成 2025-02-25 格式，方便和旧数据兼容
+        else:
+            title = raw_text
+            date_str = ""
+
+        if not title:
             continue
 
         href = link["href"]
-        full_url = href if href.startswith("http") else "https://jwc.swjtu.edu.cn" + href
-
-        # 日期通常出现在这条新闻所在的父容器文字里，格式类似 2026-08-02 10:50:16
-        container = link.find_parent(["div", "li", "dd"]) or link.parent
-        container_text = container.get_text(" ", strip=True) if container else ""
-        date_match = re.search(r"\d{4}-\d{2}-\d{2}", container_text)
-        date_str = date_match.group() if date_match else ""
+        full_url = urljoin(url, href)
 
         results.append({
             "title": title,
