@@ -13,6 +13,7 @@
 import os
 import re
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.header import Header
 
@@ -24,7 +25,7 @@ QQ_AUTH_CODE = os.environ.get("QQ_AUTH_CODE", "")
 SEND_TO = os.environ.get("SEND_TO", QQ_EMAIL)
 
 SMTP_SERVER = "smtp.qq.com"
-SMTP_PORT = 465
+SMTP_PORT = 587
 
 COLOR_DARK = "#2c3e50"
 COLOR_ACCENT = "#3f6b8f"
@@ -374,17 +375,29 @@ def send_brief_email():
     msg["To"] = SEND_TO
     msg["Subject"] = Header(f"每日简报·{slot_tag} {date}", "utf-8")
 
-    try:
-        server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT)
-        server.login(QQ_EMAIL, QQ_AUTH_CODE)
-        server.sendmail(QQ_EMAIL, [SEND_TO], msg.as_string())
-        server.quit()
-        print(f"✅ 简报已发送到 {SEND_TO}")
-        if slot == "morning":
-            seen_items = collect_seen_items(sections)
-            seen_records.record_today(date, seen_items)
-    except Exception as e:
-        print(f"❌ 发送失败：{e}")
+    max_retries = 3
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(QQ_EMAIL, QQ_AUTH_CODE)
+            server.sendmail(QQ_EMAIL, [SEND_TO], msg.as_string())
+            server.quit()
+            print(f"✅ 简报已发送到 {SEND_TO}（第{attempt}次尝试成功）")
+            if slot == "morning":
+                seen_items = collect_seen_items(sections)
+                seen_records.record_today(date, seen_items)
+            return
+        except Exception as e:
+            last_error = e
+            print(f"⚠️ 第{attempt}次发送失败：{e}")
+            if attempt < max_retries:
+                time.sleep(5)
+
+    print(f"❌ 发送失败（已重试{max_retries}次）：{last_error}")
 
 
 if __name__ == "__main__":
