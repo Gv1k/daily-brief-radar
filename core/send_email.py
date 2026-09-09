@@ -56,7 +56,7 @@ def _split_line(line, min_parts):
 def _safe_href(url):
     """将原始 URL 安全地放入 HTML href 属性，避免邮箱客户端截断链接。"""
     url = (url or "").strip().strip("<>\"'")
-    return html.escape(url, quote=True)
+    return html_lib.escape(url, quote=True)
 
 
 def parse_brief(content):
@@ -155,7 +155,7 @@ def render_jwc_cards(text):
         title, url, desc = parts[0], parts[1], parts[2]
         if not title:
             continue
-        title_html = f'<a href="{_safe_href(url)}" style="color:inherit; text-decoration:none; border-bottom:1px dotted currentColor;">{html.escape(title)}</a>' if url else html.escape(title)
+        title_html = f'<a href="{_safe_href(url)}" style="color:inherit; text-decoration:none; border-bottom:1px dotted currentColor;">{html_lib.escape(title)}</a>' if url else html_lib.escape(title)
         if mode == "action":
             html += f'''<div style="background:{COLOR_BG_ACCENT}; border-left:3px solid {COLOR_ACCENT}; border-radius:4px; padding:14px 18px; margin-bottom:10px;">
                 <div style="font-size:17px; font-weight:600; color:#222;">{title_html}</div>
@@ -182,7 +182,7 @@ def render_top_picks(text):
         label, title, url, happened, progress, principle, meaning = parts[:7]
         if not title:
             continue
-        title_html = f'<a href="{_safe_href(url)}" style="color:#222; text-decoration:none; border-bottom:1px dotted #222;">{html.escape(title)}</a>' if url else html.escape(title)
+        title_html = f'<a href="{_safe_href(url)}" style="color:#222; text-decoration:none; border-bottom:1px dotted #222;">{html_lib.escape(title)}</a>' if url else html_lib.escape(title)
         html += f'''<div style="background:#fff; border:1px solid {COLOR_ACCENT}; border-radius:6px; padding:18px 20px; margin-bottom:14px;">
             <div style="display:inline-block; background:{COLOR_ACCENT}; color:#fff; font-size:12px; padding:3px 10px; border-radius:10px; margin-bottom:8px;">{label}</div>
             <div style="font-size:18px; font-weight:600; color:#222; margin-top:6px;">{title_html}</div>
@@ -211,7 +211,7 @@ def render_content_cards(text):
             title, url, tags, digest, comment = parts[:5]
         if not title:
             continue
-        title_html = f'<a href="{_safe_href(url)}" style="color:#222; text-decoration:none; border-bottom:1px dotted #222;">{html.escape(title)}</a>' if url else html.escape(title)
+        title_html = f'<a href="{_safe_href(url)}" style="color:#222; text-decoration:none; border-bottom:1px dotted #222;">{html_lib.escape(title)}</a>' if url else html_lib.escape(title)
         tag_badges = "".join([
             f'<span style="display:inline-block; background:{COLOR_BG_ACCENT}; color:{COLOR_ACCENT}; font-size:12px; padding:3px 8px; border-radius:8px; margin-right:5px;">{t.strip()}</span>'
             for t in tags.split(",") if t.strip()
