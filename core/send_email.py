@@ -13,6 +13,7 @@
 import os
 import re
 import html as html_lib
+import urllib.parse
 import smtplib
 import time
 from email.mime.text import MIMEText
@@ -56,6 +57,11 @@ def _split_line(line, min_parts):
 def _safe_href(url):
     """将原始 URL 安全地放入 HTML href 属性，避免邮箱客户端截断链接。"""
     url = (url or "").strip().strip("<>\"'")
+    # AI 偶尔会把“|||说明文字”一起放进链接，并被编码成 %7C%7C。
+    # 解码后截断，避免邮件客户端把说明文字也当成 URL。
+    decoded = urllib.parse.unquote(url)
+    if "|||" in decoded:
+        url = decoded.split("|||", 1)[0].strip()
     return html_lib.escape(url, quote=True)
 
 
