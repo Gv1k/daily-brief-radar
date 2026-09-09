@@ -12,7 +12,7 @@
 """
 import os
 import re
-import html
+import html as html_lib
 import smtplib
 import time
 from email.mime.text import MIMEText
