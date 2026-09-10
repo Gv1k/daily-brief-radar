@@ -15,7 +15,7 @@ Hacker News、AI/科技媒体 RSS、（可选）你学校的教务网抓取内�
 
 ## 快速开始
 
-👉 **[打开设置引导页](https://gv1k.github.io/daily-brief/)** ——一步步教你 fork、拿 API key、填问卷、配置 Secrets。
+👉 **[打开设置引导页](https://gv1k.github.io/daily-brief-html/)** ——一步步教你 fork、拿 API key、填问卷、配置 Secrets。
 
 ## 项目结构
 
